@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Gateway - DANA, GOPAY, OVO, QRIS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            animation: fadeIn 0.8s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            text-align: center;
+            padding: 35px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 8s infinite linear;
+        }
+
+        @keyframes pulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .payment-content {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .payment-methods {
+            flex: 1;
+            min-width: 320px;
+            padding: 35px;
+            background: #f8faff;
+            border-right: 1px solid #eaeaea;
+        }
+
+        .payment-title {
+            font-size: 1.6rem;
+            margin-bottom: 30px;
+            color: #2575fc;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .payment-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            border-radius: 3px;
+        }
+
+        .method {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 15px;
+            padding: 18px;
+            margin-bottom: 18px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.07);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .method::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.7s;
+        }
+
+        .method:hover::before {
+            left: 100%;
+        }
+
+        .method:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .method.active {
+            border: 2px solid #2575fc;
+            background: #eef5ff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(37, 117, 252, 0.2);
+        }
+
+        .method-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            margin-right: 18px;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .method:hover .method-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .dana .method-icon {
+            background: linear-gradient(135deg, #00a3e0, #0080ff);
+        }
+
+        .gopay .method-icon {
+            background: linear-gradient(135deg, #00aae7, #0088cc);
+        }
+
+        .ovo .method-icon {
+            background: linear-gradient(135deg, #4c2a86, #6a3cb0);
+        }
+
+        .qris .method-icon {
+            background: linear-gradient(135deg, #23b197, #1a8c74);
+        }
+
+        .method-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        .method-info p {
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        .payment-details {
+            flex: 1.2;
+            min-width: 320px;
+            padding: 35px;
+            background: white;
+            display: flex;
+            align-items: center;
+        }
+
+        .detail-content {
+            width: 100%;
+            animation: fadeIn 0.5s ease;
+            text-align: center;
+        }
+
+        .detail-header {
+            margin-bottom: 35px;
+        }
+
+        .detail-header i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: inline-block;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+
+        .detail-header h2 {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .detail-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .payment-info {
+            background: #f8faff;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eaeaea;
+        }
+
+        .payment-info p {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #555;
+        }
+
+        .payment-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2575fc;
+            margin: 20px 0;
+            word-break: break-all;
+            padding: 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 10px;
+            border: 2px dashed #2575fc;
+            text-shadow: 0 2px 3px rgba(0,0,0,0.1);
+        }
+
+        .copy-btn {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            margin-top: 15px;
+            box-shadow: 0 6px 15px rgba(37, 117, 252, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .copy-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(37, 117, 252, 0.4);
+        }
+
+        .copy-btn:active::after {
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(40, 40);
+                opacity: 0;
+            }
+        }
+
+        .qris-image {
+            width: 100%;
+            max-width: 280px;
+            margin: 25px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transition: transform 0.4s ease;
+        }
+
+        .qris-image:hover {
+            transform: scale(1.03);
+        }
+
+        .qris-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .instruction {
+            text-align: left;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0f7ff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .instruction h3 {
+            margin-bottom: 15px;
+            color: #2575fc;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .instruction h3 i {
+            margin-right: 10px;
+        }
+
+        .instruction ol {
+            padding-left: 25px;
+        }
+
+        .instruction li {
+            margin-bottom: 12px;
+            line-height: 1.5;
+            font-size: 1.05rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: #f8faff;
+            color: #666;
+            font-size: 1rem;
+            border-top: 1px solid #eaeaea;
+        }
+
+        @media (max-width: 768px) {
+            .payment-content {
+                flex-direction: column;
+            }
+            
+            .payment-methods {
+                border-right: none;
+                border-bottom: 1px solid #eaeaea;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .payment-number {
+                font-size: 1.4rem;
+            }
+            
+            .detail-header h2 {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* Animasi untuk konten yang berubah */
+        .fade-out {
+            animation: fadeOut 0.3s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Payment Gateway</h1>
+            <p>Pilih metode pembayaran yang Anda inginkan</p>
+        </header>
+        
+        <div class="payment-content">
+            <div class="payment-methods">
+                <h2 class="payment-title">Metode Pembayaran</h2>
+                
+                <div class="method dana active" data-method="dana">
+                    <div class="method-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="method-info">
+                        <h3>DANA</h3>
+                        <p>Transfer melalui aplikasi DANA</p>
+                    </div>
+                </div>
+                
+                <div class="method gopay" data-method="gopay">
+                    <div class="method-icon">
+                        <i class="fab fa-google-wallet"></i>
+                    </div>
+                    <div class="method-info">
+                        <h3>GOPAY</h3>
+                        <p>Transfer melalui aplikasi Gojek</p>
+                    </div>
+                </div>
+                
+                <div class="method ovo" data-method="ovo">
+                    <div class="method-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="method-info">
+                        <h3>OVO</h3>
+                        <p>Transfer melalui aplikasi OVO</p>
+                    </div>
+                </div>
+                
+                <div class="method qris" data-method="qris">
+                    <div class="method-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="method-info">
+                        <h3>QRIS</h3>
+                        <p>Scan kode QR untuk pembayaran</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-details">
+                <div class="detail-content dana-details">
+                    <div class="detail-header">
+                        <i class="fas fa-wallet"></i>
+                        <h2>Pembayaran via DANA</h2>
+                        <p>Gunakan nomor berikut untuk transfer</p>
+                    </div>
+                    
+                    <div class="payment-info">
+                        <p>Nomor DANA</p>
+                        <div class="payment-number">083861787104</div>
+                        <button class="copy-btn" data-number="083861787104">Salin Nomor</button>
+                    </div>
+                    
+                    <div class="instruction">
+                        <h3><i class="fas fa-info-circle"></i> Cara Pembayaran:</h3>
+                        <ol>
+                            <li>Buka aplikasi DANA di ponsel Anda</li>
+                            <li>Pilih menu "Kirim" atau "Transfer"</li>
+                            <li>Masukkan nomor DANA yang tertera di atas</li>
+                            <li>Masukkan jumlah transfer yang sesuai</li>
+                            <li>Konfirmasi dan selesaikan pembayaran</li>
+                            <li>Tunggu konfirmasi penerimaan pembayaran</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>&copy; 2023 Payment Gateway. Semua hak dilindungi. | Support: 083861787104</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const methods = document.querySelectorAll('.method');
+            const paymentDetails = document.querySelector('.payment-details');
+            const copyButtons = document.querySelectorAll('.copy-btn');
+            
+            // Data untuk setiap metode pembayaran
+            const paymentData = {
+                dana: {
+                    icon: 'fas fa-wallet',
+                    title: 'Pembayaran via DANA',
+                    description: 'Gunakan nomor berikut untuk transfer',
+                    number: '083861787104',
+                    instructions: [
+                        'Buka aplikasi DANA di ponsel Anda',
+                        'Pilih menu "Kirim" atau "Transfer"',
+                        'Masukkan nomor DANA yang tertera di atas',
+                        'Masukkan jumlah transfer yang sesuai',
+                        'Konfirmasi dan selesaikan pembayaran',
+                        'Tunggu konfirmasi penerimaan pembayaran'
+                    ]
+                },
+                gopay: {
+                    icon: 'fab fa-google-wallet',
+                    title: 'Pembayaran via GOPAY',
+                    description: 'Gunakan nomor berikut untuk transfer',
+                    number: '083861787104',
+                    instructions: [
+                        'Buka aplikasi Gojek di ponsel Anda',
+                        'Pilih menu "Bayar" atau "GoPay"',
+                        'Pilih "Kirim" kemudian "Ke Teman"',
+                        'Masukkan nomor telepon yang tertera di atas',
+                        'Masukkan jumlah transfer dan selesaikan pembayaran',
+                        'Simpan bukti transaksi untuk konfirmasi'
+                    ]
+                },
+                ovo: {
+                    icon: 'fas fa-money-bill-wave',
+                    title: 'Pembayaran via OVO',
+                    description: 'Gunakan nomor berikut untuk transfer',
+                    number: '083861787104',
+                    instructions: [
+                        'Buka aplikasi OVO di ponsel Anda',
+                        'Pilih menu "Transfer" atau "Kirim Uang"',
+                        'Pilih "OVO" sebagai metode transfer',
+                        'Masukkan nomor OVO yang tertera di atas',
+                        'Masukkan jumlah transfer dan selesaikan pembayaran',
+                        'Tunggu notifikasi konfirmasi pembayaran'
+                    ]
+                },
+                qris: {
+                    icon: 'fas fa-qrcode',
+                    title: 'Pembayaran via QRIS',
+                    description: 'Scan kode QR berikut untuk pembayaran',
+                    number: '',
+                    instructions: [
+                        'Buka aplikasi e-wallet atau mobile banking yang mendukung QRIS',
+                        'Pilih menu "Scan" atau "QRIS"',
+                        'Scan kode QR yang tertera di samping',
+                        'Masukkan jumlah pembayaran yang sesuai',
+                        'Konfirmasi dan selesaikan pembayaran',
+                        'Simpan bukti transaksi sebagai konfirmasi'
+                    ],
+                    qrImage: 'https://files.catbox.moe/1p526x.jpg'
+                }
+            };
+            
+            // Fungsi untuk mengubah tampilan detail pembayaran
+            function changePaymentMethod(method) {
+                const data = paymentData[method];
+                
+                // Animasi fade out
+                const currentContent = paymentDetails.querySelector('.detail-content');
+                currentContent.classList.add('fade-out');
+                
+                setTimeout(() => {
+                    // Update konten detail pembayaran
+                    const detailContent = document.createElement('div');
+                    detailContent.className = `detail-content ${method}-details`;
+                    detailContent.innerHTML = `
+                        <div class="detail-header">
+                            <i class="${data.icon}"></i>
+                            <h2>${data.title}</h2>
+                            <p>${data.description}</p>
+                        </div>
+                        
+                        <div class="payment-info">
+                            ${method !== 'qris' ? 
+                                `<p>Nomor ${method.toUpperCase()}</p>
+                                <div class="payment-number">${data.number}</div>
+                                <button class="copy-btn" data-number="${data.number}">Salin Nomor</button>` :
+                                `<div class="qris-image">
+                                    <img src="${data.qrImage}" alt="QR Code Pembayaran">
+                                </div>`
+                            }
+                        </div>
+                        
+                        <div class="instruction">
+                            <h3><i class="fas fa-info-circle"></i> Cara Pembayaran:</h3>
+                            <ol>
+                                ${data.instructions.map(step => `<li>${step}</li>`).join('')}
+                            </ol>
+                        </div>
+                    `;
+                    
+                    paymentDetails.innerHTML = '';
+                    paymentDetails.appendChild(detailContent);
+                    
+                    // Tambahkan event listener untuk tombol salin yang baru
+                    const newCopyBtn = detailContent.querySelector('.copy-btn');
+                    if (newCopyBtn) {
+                       
